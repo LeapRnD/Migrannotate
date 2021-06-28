@@ -1,0 +1,7 @@
+include ":migrannotate:annotations"
+include ":migrannotate:processor"
+include ":migrannotate:runtime"
+
+project(":migrannotate:annotations").projectDir = "$rootDir/annotations" as File
+project(":migrannotate:processor").projectDir = "$rootDir/processor" as File
+project(":migrannotate:runtime").projectDir = "$rootDir/runtime" as File
