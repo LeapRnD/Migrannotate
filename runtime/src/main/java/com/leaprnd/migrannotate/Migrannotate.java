@@ -142,7 +142,7 @@ public class Migrannotate {
 					} else if (newChecksum == EMPTY_CHECKSUM) {
 						sql.append(SQL_TO_DELETE_SCHEMA_ROW.formatted(id));
 					} else {
-						sql.append(SQL_TO_UPDATE_SCHEMA_ROW.formatted(id, newChecksum));
+						sql.append(SQL_TO_UPDATE_SCHEMA_ROW.formatted(newChecksum, id));
 					}
 					execute(sql);
 					result = MIGRATED;
