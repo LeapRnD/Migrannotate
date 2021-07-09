@@ -12,11 +12,11 @@ import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Supplier;
 
 import static com.leaprnd.migrannotate.DependencyStrategy.STABLE;
 import static com.leaprnd.migrannotate.Migration.DEFAULT_GROUP;
@@ -112,11 +112,12 @@ public class Migrannotate {
 			sql.append(SQL_TO_TRUNCATE_SCHEMA_TABLE);
 			for (final var migration : migrations) {
 				final var id = migration.getId();
-				final var latestChecksum = migration.migrate(EMPTY_CHECKSUM, new StringBuilder());
+				final var latestChecksum = migration.getLatestChecksum();
 				sql.append(SQL_TO_INSERT_SCHEMA_ROW.formatted(id, latestChecksum));
 			}
 			try {
-				execute(sql);
+				execute(sql.toString());
+				connection.commit();
 			} catch (SQLException exception) {
 				throw new FailedToBaselineException(exception);
 			}
@@ -124,39 +125,65 @@ public class Migrannotate {
 		});
 	}
 
-	public MigrationResult migrate() throws SQLException, CannotUpgradeSchemaException, DuplicateSchemaIdentifierException {
+	public MigrationResult migrate() throws SQLException {
 		return withLock(() -> {
 			final var currentChecksums = fetchCurrentChecksumsFromDatabase();
-			var result = ALREADY_UP_TO_DATE;
-			final var sql = new StringBuilder();
+			final var writers = new LinkedHashMap<Long, SQLWriter>();
 			for (final var migration : loadMigrationsExcept(currentChecksums)) {
-				try {
-					final var id = migration.getId();
-					final var oldChecksum = currentChecksums.getOrDefault(id, EMPTY_CHECKSUM);
-					final var newChecksum = migration.migrate(oldChecksum, sql);
-					if (newChecksum == oldChecksum) {
-						continue;
-					}
-					if (oldChecksum == EMPTY_CHECKSUM) {
-						sql.append(SQL_TO_INSERT_SCHEMA_ROW.formatted(id, newChecksum));
-					} else if (newChecksum == EMPTY_CHECKSUM) {
-						sql.append(SQL_TO_DELETE_SCHEMA_ROW.formatted(id));
-					} else {
-						sql.append(SQL_TO_UPDATE_SCHEMA_ROW.formatted(newChecksum, id));
-					}
-					execute(sql);
-					result = MIGRATED;
-				} catch (SQLException exception) {
-					throw new FailedToMigrateException(migration.getId(), exception);
-				} finally {
-					sql.setLength(0);
+				final var id = migration.getId();
+				final var oldChecksum = currentChecksums.getOrDefault(id, EMPTY_CHECKSUM);
+				final var newChecksum = migration.getLatestChecksum();
+				if (newChecksum == oldChecksum) {
+					continue;
 				}
+				final var writer = new SQLWriter();
+				migration.migrate(oldChecksum, writer);
+				if (oldChecksum == EMPTY_CHECKSUM) {
+					writer.append(SQL_TO_INSERT_SCHEMA_ROW.formatted(id, newChecksum));
+				} else if (newChecksum == EMPTY_CHECKSUM) {
+					writer.append(SQL_TO_DELETE_SCHEMA_ROW.formatted(id));
+				} else {
+					writer.append(SQL_TO_UPDATE_SCHEMA_ROW.formatted(newChecksum, id));
+				}
+				writers.put(migration.getId(), writer);
 			}
-			return result;
+			if (writers.isEmpty()) {
+				return ALREADY_UP_TO_DATE;
+			}
+			writers.forEach((migration, writer) -> {
+				try {
+					execute(writer.getPrologue());
+				} catch (SQLException exception) {
+					throw new FailedToMigrateException(migration, exception);
+				}
+			});
+			connection.commit();
+			writers.forEach((migration, writer) -> {
+				try {
+					execute(writer.getSql());
+				} catch (SQLException exception) {
+					throw new FailedToMigrateException(migration, exception);
+				}
+			});
+			connection.commit();
+			writers.forEach((migration, writer) -> {
+				try {
+					execute(writer.getEpilogue());
+				} catch (SQLException exception) {
+					throw new FailedToMigrateException(migration, exception);
+				}
+			});
+			connection.commit();
+			return MIGRATED;
 		});
 	}
 
-	private MigrationResult withLock(Supplier<MigrationResult> supplier) throws SQLException {
+	@FunctionalInterface
+	private interface MigrationResultSupplier {
+		MigrationResult get() throws SQLException;
+	}
+
+	private MigrationResult withLock(MigrationResultSupplier supplier) throws SQLException {
 		if (executeBooleanQuery(SQL_TO_LOCK)) {
 			try {
 				final var oldAutoCommit = connection.getAutoCommit();
@@ -185,10 +212,6 @@ public class Migrannotate {
 		}
 	}
 
-	private void execute(StringBuilder sql) throws SQLException {
-		execute(sql.toString());
-	}
-
 	private void execute(String sql) throws SQLException {
 		try (final var statement = connection.prepareStatement(sql)) {
 			var isResultSet = statement.execute();
@@ -196,7 +219,6 @@ public class Migrannotate {
 				isResultSet = statement.getMoreResults();
 			} while (isResultSet || statement.getUpdateCount() != -1);
 		}
-		connection.commit();
 	}
 
 	private Map<Long, Long> fetchCurrentChecksumsFromDatabase() {

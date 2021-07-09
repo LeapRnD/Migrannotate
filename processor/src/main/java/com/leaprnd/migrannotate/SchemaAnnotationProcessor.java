@@ -168,6 +168,7 @@ public class SchemaAnnotationProcessor extends AbstractMigrannotateAnnotationPro
 				.addField(latestRepeatableChecksumSpec())
 				.addField(latestChecksumSpec())
 				.addMethod(getIdSpec())
+				.addMethod(getLatestChecksumSpec())
 				.addMethod(migrateMethodSpec())
 				.addMethod(isDependentOnSpec())
 				.build();
@@ -290,7 +291,6 @@ public class SchemaAnnotationProcessor extends AbstractMigrannotateAnnotationPro
 						previous = value;
 					}
 				}
-				sql.append("COMMIT;");
 			}
 			return sql.toString();
 		}
@@ -305,14 +305,23 @@ public class SchemaAnnotationProcessor extends AbstractMigrannotateAnnotationPro
 				.build();
 		}
 
+		private MethodSpec getLatestChecksumSpec() {
+			return MethodSpec
+				.methodBuilder("getLatestChecksum")
+				.addAnnotation(Override.class)
+				.addModifiers(PUBLIC, FINAL)
+				.returns(LONG)
+				.addStatement("return $L", LATEST_CHECKSUM_NAME)
+				.build();
+		}
+
 		private MethodSpec migrateMethodSpec() {
 			return MethodSpec
 				.methodBuilder("migrate")
 				.addAnnotation(Override.class)
 				.addModifiers(PUBLIC, FINAL)
-				.returns(LONG)
 				.addParameter(LONG, CURRENT_CHECKSUM_NAME)
-				.addParameter(StringBuilder.class, "sql")
+				.addParameter(SQLWriter.class, "sql")
 				.addCode(migrateMethodCode())
 				.build();
 		}
@@ -329,7 +338,7 @@ public class SchemaAnnotationProcessor extends AbstractMigrannotateAnnotationPro
 			code.addStatement("$L &= $LL", CURRENT_CHECKSUM_NAME, NORMAL_CHECKSUM_MASK);
 			final var enumSQL = enumSql();
 			if (!enumSQL.isEmpty()) {
-				code.beginControlFlow("if (repeat)").addStatement("sql.append($S)", enumSQL).endControlFlow();
+				code.beginControlFlow("if (repeat)").addStatement("sql.appendToPrologue($S)", enumSQL).endControlFlow();
 			}
 			final var normalSchema = annotatedClass.getAnnotation(Schema.class);
 			if (normalSchema != null) {
@@ -365,7 +374,6 @@ public class SchemaAnnotationProcessor extends AbstractMigrannotateAnnotationPro
 					.addStatement("sql.append($S)", repeatableSchema.value())
 					.endControlFlow();
 			}
-			code.addStatement("return $L", LATEST_CHECKSUM_NAME);
 			return code.build();
 		}
 

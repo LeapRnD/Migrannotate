@@ -30,7 +30,8 @@ public interface Migration {
 	long EMPTY_CHECKSUM = 0L;
 
 	long getId();
-	long migrate(long currentChecksum, StringBuilder sql);
+	long getLatestChecksum();
+	void migrate(long currentChecksum, SQLWriter writer);
 
 	default boolean isDependentOn(Migration other) {
 		return false;
