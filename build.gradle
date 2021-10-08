@@ -1,5 +1,74 @@
-allprojects {
+import static java.lang.System.getenv;
+
+subprojects {
+
+	group = "com.leaprnd.migrannotate"
+	version = "1.0.2"
+
+	apply plugin: "java-library"
+
 	repositories {
 		mavenCentral()
 	}
+
+	task sourcesJar(type: Jar) {
+		archiveClassifier = "sources"
+		from sourceSets.main.allSource
+	}
+
+	task javadocJar(type: Jar) {
+		archiveClassifier = "javadoc"
+		from tasks.javadoc.destinationDir
+	}
+
+	apply plugin: "maven-publish"
+
+	publishing {
+		publications {
+			mavenJava(MavenPublication) {
+				from components.java
+				artifact sourcesJar
+				artifact javadocJar
+				pom {
+					name = "Migrannotate"
+					description = "Version control your database schema using Java annotations"
+					url = "https://github.com/Leap-R-D/Migrannotate"
+					licenses {
+						license {
+							name = "Apache-2.0"
+							url = "https://opensource.org/licenses/Apache-2.0"
+						}
+					}
+					developers {
+						developer {
+							name = "Ryan Holdren"
+							email = "ryan@holdren.ca"
+						}
+					}
+					scm {
+						connection = "scm:git:git://github.com/Leap-R-D/Migrannotate.git"
+						developerConnection = "scm:git:ssh://github.com/Leap-R-D/Migrannotate.git"
+						url = "https://github.com/Leap-R-D/Migrannotate.git"
+					}
+				}
+			}
+		}
+		repositories {
+			maven {
+				name = "OSSRH"
+				url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+				credentials {
+					username = getenv("MAVEN_CENTRAL_USERNAME")
+					password = getenv("MAVEN_CENTRAL_PASSWORD")
+				}
+			}
+		}
+	}
+
+	apply plugin: "signing"
+
+	signing {
+		sign publishing.publications
+	}
+
 }

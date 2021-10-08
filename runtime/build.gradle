@@ -15,7 +15,6 @@ test {
 
 dependencies {
 	compileOnly group: "org.jetbrains", name: "annotations", version: "21.0.1"
-	annotationProcessor(project(":migrannotate:processor"))
 	api project(":migrannotate:annotations")
 	testAnnotationProcessor project(":migrannotate:processor")
 	testImplementation platform("org.testcontainers:testcontainers-bom:1.15.3")

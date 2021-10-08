@@ -1,0 +1,31 @@
+name: Publish
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: Publish
+    steps:
+      - uses: actions/checkout@v2
+      - name: script
+        shell: bash
+        run: |
+          echo "${{ secrets.GPG_KEY_RING_CONTENTS }}" | base64 --decode > ~/secretKeyRingFile.gpg
+          mkdir ~/.gradle/
+          cat << EOF > ~/.gradle/gradle.properties
+          signing.keyId=${{ secrets.GPG_KEY_ID }}
+          signing.password=${{ secrets.GPG_PASSWORD }}
+          signing.secretKeyRingFile=$(readlink --canonicalize ~/secretKeyRingFile.gpg)
+          EOF
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '16'
+          distribution: 'adopt'
+      - uses: eskatos/gradle-command-action@v1
+        env:
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+        with:
+          gradle-version: current
+          arguments: publish
