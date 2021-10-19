@@ -10,7 +10,11 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @Target(TYPE)
 @Retention(SOURCE)
 public @interface Migrate {
+
+	long UNKNOWN_AT_COMPILE_TIME = -1395564138469529021L;
+
 	long id();
-	long latestChecksum() default 0L;
+	long latestChecksum() default UNKNOWN_AT_COMPILE_TIME;
 	String group() default DEFAULT_GROUP;
+
 }
