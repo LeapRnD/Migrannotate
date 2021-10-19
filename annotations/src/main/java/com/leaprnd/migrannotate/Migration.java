@@ -4,6 +4,14 @@ import java.util.regex.Pattern;
 
 public interface Migration {
 
+	static int getLowerOrderBitsOf(long value) {
+		return (int) value;
+	}
+
+	static int getHigherOrderBitsOf(long value) {
+		return (int) (value >> 32);
+	}
+
 	static String enquoteLiteral(String value) {
 		return "'" + value.replace("'", "''") + "'";
 	}

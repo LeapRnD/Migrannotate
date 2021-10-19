@@ -4,9 +4,19 @@ import static java.lang.String.format;
 
 public final class SQLWriter {
 
+	private final long id;
+
 	private final StringBuilder prologue = new StringBuilder();
 	private final StringBuilder sql = new StringBuilder();
 	private final StringBuilder epilogue = new StringBuilder();
+
+	SQLWriter(long id) {
+		this.id = id;
+	}
+
+	long getId() {
+		return id;
+	}
 
 	public void appendToPrologue(String format) {
 		prologue.append(format);

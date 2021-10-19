@@ -14,7 +14,7 @@ In contrast to most database schema management tools, with Migrannotate, you spe
 
 ## Warning
 
-This project has only been tested with [PostgreSQL](https://www.postgresql.org/); it will most likely not work with other databases. Pull requests welcome!
+Though this project is based on [JDBC](https://en.wikipedia.org/wiki/Java_Database_Connectivity), it has been developed and tested exclusively with [PostgreSQL](https://www.postgresql.org/). It will not work with other databases at this time. Pull requests welcome!
 
 ## Usage
 
@@ -23,9 +23,9 @@ First you will need to add Migrannotate to your project. If you are using [Gradl
 ```groovy
 dependencies {
     compileOnly group: "org.jetbrains", name: "annotations", version: "21.0.1"
-    annotationProcessor group: "com.leaprnd.migrannotate", name: "processor", version: "1.0.2"
-    api group: "com.leaprnd.migrannotate", name: "annotations", version: "1.0.2"
-    implementation group: "com.leaprnd.migrannotate", name: "runtime", version: "1.0.2"
+    annotationProcessor group: "com.leaprnd.migrannotate", name: "processor", version: "1.0.3"
+    api group: "com.leaprnd.migrannotate", name: "annotations", version: "1.0.3"
+    implementation group: "com.leaprnd.migrannotate", name: "runtime", version: "1.0.3"
 }
 ```
 
@@ -178,8 +178,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
 
-import static com.leaprnd.migrannotate.DependencyStrategy.REVERSE_STABLE;
-import static com.leaprnd.migrannotate.DependencyStrategy.STABLE;
+import static com.leaprnd.migrannotate.ExecutionDirection.FORWARD;
+import static com.leaprnd.migrannotate.ExecutionDirection.BACKWARD;
 import static com.leaprnd.migrannotate.MigrationResult.ALREADY_UP_TO_DATE;
 import static com.leaprnd.migrannotate.MigrationResult.MIGRATED;
 import static java.util.EnumSet.of;
@@ -202,12 +202,12 @@ public class MigrannotateTest {
     @Test
     public void testMigrate() throws SQLException {
         final var connection = DriverManager.getConnection("jdbc:tc:postgresql:" + VERSION + ":///test");
-        for (final var dependencyStrategy : of(STABLE, REVERSE_STABLE)) {
+        for (final var executionDirection : of(FORWARD, BACKWARD)) {
             try (final var statement = connection.createStatement()) {
                 statement.executeUpdate("DROP SCHEMA IF EXISTS public CASCADE");
                 statement.executeUpdate("CREATE SCHEMA public");
             }
-            final var migrannotate = new Migrannotate(connection, dependencyStrategy);
+            final var migrannotate = new Migrannotate(connection, executionDirection);
             assertEquals(MIGRATED, migrannotate.migrate());
             assertEquals(ALREADY_UP_TO_DATE, migrannotate.migrate());
         }
@@ -216,7 +216,7 @@ public class MigrannotateTest {
 }
 ```
 
-Doing the migration twice with different dependency strategies guarantees that you aren't missing a `@SchemaDependency`.
+Doing the migration twice with different execution directions guarantees that you aren't missing a `@SchemaDependency`.
 
 ## Other Features
 

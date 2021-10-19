@@ -31,6 +31,8 @@ import java.util.zip.CRC32;
 import static com.leaprnd.migrannotate.Migration.DEFAULT_GROUP;
 import static com.leaprnd.migrannotate.Migration.enquoteIdentifier;
 import static com.leaprnd.migrannotate.Migration.enquoteLiteral;
+import static com.leaprnd.migrannotate.Migration.getHigherOrderBitsOf;
+import static com.leaprnd.migrannotate.Migration.getLowerOrderBitsOf;
 import static com.squareup.javapoet.TypeName.BOOLEAN;
 import static com.squareup.javapoet.TypeName.LONG;
 import static java.lang.Character.isWhitespace;
@@ -149,6 +151,8 @@ public class SchemaAnnotationProcessor extends AbstractMigrannotateAnnotationPro
 				.indent("\t")
 				.addStaticImport(className, ID_NAME)
 				.addStaticImport(className, LATEST_CHECKSUM_NAME)
+				.addStaticImport(Migration.class, "getLowerOrderBitsOf")
+				.addStaticImport(Migration.class, "getHigherOrderBitsOf")
 				.build();
 		}
 
@@ -170,7 +174,8 @@ public class SchemaAnnotationProcessor extends AbstractMigrannotateAnnotationPro
 				.addMethod(getIdSpec())
 				.addMethod(getLatestChecksumSpec())
 				.addMethod(migrateMethodSpec())
-				.addMethod(isDependentOnSpec())
+				.addMethod(isDependentOnMigrationSpec())
+				.addMethod(isDependentOnIdSpec())
 				.build();
 		}
 
@@ -377,28 +382,51 @@ public class SchemaAnnotationProcessor extends AbstractMigrannotateAnnotationPro
 			return code.build();
 		}
 
-		private MethodSpec isDependentOnSpec() {
+		private MethodSpec isDependentOnMigrationSpec() {
 			return MethodSpec
 				.methodBuilder("isDependentOn")
 				.addAnnotation(Override.class)
 				.addModifiers(PUBLIC, FINAL)
 				.returns(BOOLEAN)
 				.addParameter(Migration.class, OTHER_MIGRATION_NAME)
-				.addCode(isDependentOnCode())
+				.addStatement("return isDependentOn($L.getId())", OTHER_MIGRATION_NAME)
 				.build();
 		}
 
-		private CodeBlock isDependentOnCode() {
+		private MethodSpec isDependentOnIdSpec() {
+			return MethodSpec
+				.methodBuilder("isDependentOn")
+				.addModifiers(PUBLIC, STATIC)
+				.returns(BOOLEAN)
+				.addParameter(LONG, "id")
+				.addCode(isDependentOnIdCode())
+				.build();
+		}
+
+		// https://stackoverflow.com/questions/2676210/why-cant-your-switch-statement-data-type-be-long-java
+		private CodeBlock isDependentOnIdCode() {
 			final var code = CodeBlock.builder();
 			final var dependencies = findDependenciesOf(annotatedClass);
 			if (dependencies.isEmpty()) {
 				code.addStatement("return false");
 			} else {
-				code.addStatement("final var id = $L.getId()", OTHER_MIGRATION_NAME);
-				for (final var dependency : dependencies) {
-					code.beginControlFlow("if (id == $LL)", dependency).addStatement("return true").endControlFlow();
+				code.beginControlFlow("return switch (getLowerOrderBitsOf(id))");
+				final var firstIterator = dependencies.iterator();
+				code.add("case $L", getLowerOrderBitsOf(firstIterator.next()));
+				while (firstIterator.hasNext()) {
+					code.add(", $L", getLowerOrderBitsOf(firstIterator.next()));
 				}
-				code.addStatement("return false");
+				code.beginControlFlow(" -> switch (getHigherOrderBitsOf(id))");
+				final var secondIterator = dependencies.iterator();
+				code.add("case $L", getHigherOrderBitsOf(secondIterator.next()));
+				while (secondIterator.hasNext()) {
+					code.add(", $L", getHigherOrderBitsOf(secondIterator.next()));
+				}
+				code.addStatement(" -> true");
+				code.addStatement("default -> false");
+				code.endControlFlow("");
+				code.addStatement("default -> false");
+				code.endControlFlow("");
 			}
 			return code.build();
 		}
