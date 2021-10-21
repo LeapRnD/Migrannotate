@@ -438,7 +438,8 @@ public class SchemaAnnotationProcessor extends AbstractMigrannotateAnnotationPro
 			value.get();
 			throw new IllegalStateException();
 		} catch (MirroredTypeException exception) {
-			if (exception.getTypeMirror() instanceof final DeclaredType declaredType) {
+			final var typeMirror = exception.getTypeMirror();
+			if (typeMirror instanceof final DeclaredType declaredType) {
 				return declaredType;
 			}
 			throw new IllegalStateException();

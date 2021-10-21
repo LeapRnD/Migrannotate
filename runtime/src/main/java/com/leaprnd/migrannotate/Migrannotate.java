@@ -6,7 +6,6 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -173,7 +172,7 @@ public class Migrannotate {
 		return currentChecksumsById;
 	}
 
-	private Collection<SQLWriter> createSqlWriters(Map<Long, Long> currentChecksums) throws DuplicateSchemaIdentifierException {
+	private Collection<SQLWriter> createSqlWriters(Map<Long, Long> currentChecksums) {
 		final var lookup = MethodHandles.lookup();
 		final var classLoader = getSystemClassLoader();
 		try {
@@ -239,7 +238,7 @@ public class Migrannotate {
 				}
 			}
 			return getValuesInOrder(unordered);
-		} catch (IOException | IllegalAccessException | NoSuchMethodException | InstantiationException | InvocationTargetException exception) {
+		} catch (IOException | ReflectiveOperationException exception) {
 			throw new RuntimeException(exception);
 		}
 	}

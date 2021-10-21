@@ -14,12 +14,12 @@ test {
 }
 
 dependencies {
-	compileOnly group: "org.jetbrains", name: "annotations", version: "21.0.1"
+	compileOnly group: "org.jetbrains", name: "annotations", version: "22.0.0"
 	api project(":migrannotate:annotations")
 	testAnnotationProcessor project(":migrannotate:processor")
-	testImplementation platform("org.testcontainers:testcontainers-bom:1.15.3")
+	testImplementation platform("org.testcontainers:testcontainers-bom:1.16.1")
 	testImplementation group: "org.testcontainers", name: "jdbc"
 	testImplementation group: "org.testcontainers", name: "postgresql"
-	testImplementation group: "org.junit.jupiter", name: "junit-jupiter", version: "5.7.2"
-	testImplementation group: "org.postgresql", name: "postgresql", version: "42.2.23"
+	testImplementation group: "org.junit.jupiter", name: "junit-jupiter", version: "5.8.1"
+	testImplementation group: "org.postgresql", name: "postgresql", version: "42.3.0"
 }
