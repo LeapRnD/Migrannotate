@@ -20,7 +20,7 @@ jobs:
           EOF
       - uses: actions/setup-java@v2
         with:
-          java-version: '16'
+          java-version: '17'
           distribution: 'adopt'
       - uses: eskatos/gradle-command-action@v1
         env:
@@ -28,4 +28,4 @@ jobs:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
         with:
           gradle-version: current
-          arguments: publish
+          arguments: test publish

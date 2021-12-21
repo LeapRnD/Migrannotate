@@ -3,7 +3,7 @@ import static java.lang.System.getenv;
 subprojects {
 
 	group = "com.leaprnd.migrannotate"
-	version = "1.0.4"
+	version = "1.0.5"
 
 	apply plugin: "java-library"
 

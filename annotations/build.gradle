@@ -1,5 +1,5 @@
 apply plugin: "java-library"
 
 dependencies {
-	compileOnly group: "org.jetbrains", name: "annotations", version: "22.0.0"
+	compileOnly group: "org.jetbrains", name: "annotations", version: "23.0.0"
 }
