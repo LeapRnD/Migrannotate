@@ -23,9 +23,9 @@ First you will need to add Migrannotate to your project. If you are using [Gradl
 ```groovy
 dependencies {
     compileOnly group: "org.jetbrains", name: "annotations", version: "21.0.1"
-    annotationProcessor group: "com.leaprnd.migrannotate", name: "processor", version: "1.0.5"
-    api group: "com.leaprnd.migrannotate", name: "annotations", version: "1.0.5"
-    implementation group: "com.leaprnd.migrannotate", name: "runtime", version: "1.0.5"
+    annotationProcessor group: "com.leaprnd.migrannotate", name: "processor", version: "1.0.6"
+    api group: "com.leaprnd.migrannotate", name: "annotations", version: "1.0.6"
+    implementation group: "com.leaprnd.migrannotate", name: "runtime", version: "1.0.6"
 }
 ```
 
