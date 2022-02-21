@@ -3,7 +3,7 @@ import static java.lang.System.getenv;
 subprojects {
 
 	group = "com.leaprnd.migrannotate"
-	version = "1.0.6"
+	version = "1.0.7"
 
 	apply plugin: "java-library"
 
@@ -32,7 +32,7 @@ subprojects {
 				pom {
 					name = "Migrannotate"
 					description = "Version control your database schema using Java annotations"
-					url = "https://github.com/Leap-R-D/Migrannotate"
+					url = "https://github.com/LeapRnD/Migrannotate"
 					licenses {
 						license {
 							name = "Apache-2.0"
@@ -46,9 +46,9 @@ subprojects {
 						}
 					}
 					scm {
-						connection = "scm:git:git://github.com/Leap-R-D/Migrannotate.git"
-						developerConnection = "scm:git:ssh://github.com/Leap-R-D/Migrannotate.git"
-						url = "https://github.com/Leap-R-D/Migrannotate.git"
+						connection = "scm:git:git://github.com/LeapRnD/Migrannotate.git"
+						developerConnection = "scm:git:ssh://github.com/LeapRnD/Migrannotate.git"
+						url = "https://github.com/LeapRnD/Migrannotate.git"
 					}
 				}
 			}

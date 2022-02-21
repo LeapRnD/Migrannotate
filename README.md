@@ -1,6 +1,6 @@
 # Migrannotate
 
-![Maven](https://badgen.net/maven/v/maven-central/com.leaprnd.migrannotate/runtime) [![Tests](https://github.com/Leap-R-D/Migrannotate/actions/workflows/test.yml/badge.svg)](https://github.com/Leap-R-D/Migrannotate/actions)
+![Maven](https://badgen.net/maven/v/maven-central/com.leaprnd.migrannotate/runtime) [![Tests](https://github.com/LeapRnD/Migrannotate/actions/workflows/test.yml/badge.svg)](https://github.com/LeapRnD/Migrannotate/actions)
 
 Migrannotate small, fast Java library for managing database schema changes via annotations. It fulfills a similar purpose to [Flyway](https://flywaydb.org/) or [Liquibase](https://www.liquibase.org/) but with several very important architectural differences.
 
@@ -23,9 +23,9 @@ First you will need to add Migrannotate to your project. If you are using [Gradl
 ```groovy
 dependencies {
     compileOnly group: "org.jetbrains", name: "annotations", version: "21.0.1"
-    annotationProcessor group: "com.leaprnd.migrannotate", name: "processor", version: "1.0.6"
-    api group: "com.leaprnd.migrannotate", name: "annotations", version: "1.0.6"
-    implementation group: "com.leaprnd.migrannotate", name: "runtime", version: "1.0.6"
+    annotationProcessor group: "com.leaprnd.migrannotate", name: "processor", version: "1.0.7"
+    api group: "com.leaprnd.migrannotate", name: "annotations", version: "1.0.7"
+    implementation group: "com.leaprnd.migrannotate", name: "runtime", version: "1.0.7"
 }
 ```
 
